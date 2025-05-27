@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cookie Clicker – Anhaj Uwaisulkarni</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    #game-container {
+      max-width: 400px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(31,31,31,0.7);
+      border-radius: 12px;
+      color: var(--text-color);
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    #cookie {
+      width: 180px;
+      height: 180px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      margin: 1rem auto;
+      display: block;
+      user-select: none;
+    }
+
+    #cookie:active {
+      transform: scale(0.95);
+    }
+
+    #score {
+      font-size: 1.5rem;
+      margin: 1rem 0 2rem;
+    }
+
+    .shop-item {
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid #555;
+      padding: 15px;
+      margin: 10px auto;
+      border-radius: 8px;
+      max-width: 300px;
+    }
+
+    .shop-item button {
+      background-color: var(--accent-color);
+      border: none;
+      color: var(--text-color);
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: 100%;
+    }
+
+    .shop-item button:hover:not(:disabled) {
+      background-color: var(--button-color);
+    }
+
+    .shop-item button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Back button */
+    #back-home-btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      background-color: var(--accent-color);
+      border: none;
+      color: var(--text-color);
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #back-home-btn:hover {
+      background-color: var(--button-color);
+    }
+
+    /* How to play section */
+    #how-to-play {
+      max-width: 400px;
+      margin: 2rem auto 0;
+      color: var(--text-color);
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      background: rgba(31,31,31,0.5);
+      padding: 15px 20px;
+      border-radius: 10px;
+      text-align: left;
+    }
+    #how-to-play h2 {
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div id="loader" class="loader"></div>
+
+  <header>
+    <a href="index.html" class="logo">Anhaj U.</a>
+    <button id="menu-toggle" aria-label="Open Menu" aria-expanded="false">☰</button>
+    <div id="mobile-menu-container">
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="certificates.html">Certificates</a>
+        <a href="experience.html">Work Experience</a>
+        <a href="entertainment.html">Entertainment</a>
+        <!-- Cookie Clicker removed here -->
+        <div class="social-media-mobile">
+          <a href="https://github.com/Anhaj0" target="_blank"><img src="assets/images/github-logo.png" alt="GitHub" /></a>
+          <a href="https://www.linkedin.com/in/anhaj-uwaisulkarni-1781a8308/" target="_blank"><img src="assets/images/linkedin-logo.png" alt="LinkedIn" /></a>
+        </div>
+      </nav>
+    </div>
+    <div class="social-media-desktop">
+      <a href="https://github.com/Anhaj0" target="_blank"><img src="assets/images/github-logo.png" alt="GitHub" /></a>
+      <a href="https://www.linkedin.com/in/anhaj-uwaisulkarni-1781a8308/" target="_blank"><img src="assets/images/linkedin-logo.png" alt="LinkedIn" /></a>
+    </div>
+    <a href="cv/Anhaj_CV.pdf" class="button download-cv desktop-only-cv">Download CV</a>
+  </header>
+
+  <main class="container">
+    <div id="game-container">
+      <h1>Cookie Clicker</h1>
+      <div id="score">Cookies: 0</div>
+      <img id="cookie" src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="Cookie" draggable="false" />
+
+      <div id="shop">
+        <div class="shop-item">
+          <button id="buy-upgrade-btn">
+            Multiplier (Cost: 10 cookies)<br />
+            +1 cookie per click
+          </button>
+        </div>
+      </div>
+
+      <button id="back-home-btn" onclick="location.href='index.html'">← Back to Home</button>
+    </div>
+
+    <div id="how-to-play">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Click the cookie to collect cookies.</li>
+        <li>Use cookies to buy upgrades that increase cookies per click.</li>
+        <li>Try to get as many cookies as possible!</li>
+      </ul>
+    </div>
+  </main>
+
+  <script src="assets/js/main.js"></script>
+  <script>
+    let cookies = 0;
+    let multiplier = 1;
+    let upgradeCost = 10;
+
+    const scoreEl = document.getElementById('score');
+    const cookieEl = document.getElementById('cookie');
+    const buyBtn = document.getElementById('buy-upgrade-btn');
+
+    function updateDisplay() {
+      scoreEl.textContent = `Cookies: ${Math.floor(cookies)}`;
+      buyBtn.innerHTML = `Multiplier (Cost: ${Math.floor(upgradeCost)} cookies)<br>+${multiplier} cookie${multiplier > 1 ? 's' : ''} per click`;
+
+      buyBtn.disabled = cookies < upgradeCost;
+    }
+
+    function clickCookie() {
+      cookies += multiplier;
+      updateDisplay();
+    }
+
+    function buyUpgrade() {
+      if (cookies >= upgradeCost) {
+        cookies -= upgradeCost;
+        multiplier += 1;
+        upgradeCost *= 1.5;
+        updateDisplay();
+        alert('Upgrade purchased!');
+      } else {
+        alert('Not enough cookies!');
+      }
+    }
+
+    cookieEl.addEventListener('click', clickCookie);
+    buyBtn.addEventListener('click', buyUpgrade);
+
+    updateDisplay();
+  </script>
+</body>
+</html>

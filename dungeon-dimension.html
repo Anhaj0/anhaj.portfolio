@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dungeon Dimension – Anhaj Uwaisulkarni</title>
+    <style>
+        :root {
+            --dungeon-dark: #1a1a1a;
+            --dungeon-light: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--dungeon-dark);
+            color: var(--dungeon-light);
+            margin: 0;
+            padding: 20px;
+        }
+
+        #game-container {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        #dungeon-view {
+            display: grid;
+            grid-template-columns: repeat(10, 40px);
+            gap: 2px;
+            background: #000;
+            padding: 10px;
+            border: 2px solid #444;
+        }
+
+        .tile {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tile.player { background: #00ff00; }
+        .tile.enemy { background: #ff0000; }
+        .tile.material { background: #00aaff; }
+        .tile.treasure { background: #ffd700; }
+        .tile.trap { background: #aa0000; }
+        .tile.exit { background: #4a86e8; }
+
+        #combat-screen {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            padding: 20px;
+            border: 2px solid #f00;
+            color: var(--dungeon-light);
+        }
+
+        .crafting-item {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #444;
+            cursor: pointer;
+        }
+
+        #skill-tree {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .skill-node {
+            padding: 10px;
+            border: 1px solid #4a86e8;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        #side-panel button.back-home {
+            margin-top: 20px;
+            padding: 10px;
+            width: 100%;
+            background-color: #4a86e8;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        #side-panel button.back-home:hover {
+            background-color: #3572c3;
+        }
+
+        #how-to-play {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+            color: #bbb;
+        }
+
+        #how-to-play h3 {
+            margin-top: 0;
+            color: var(--dungeon-light);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="dungeon-view"></div>
+        <div id="side-panel">
+            <div id="stats">
+                <h2>Level: <span id="player-level">1</span></h2>
+                <p>HP: <span id="player-hp">100</span>/<span id="player-max-hp">100</span></p>
+                <p>Attack: <span id="player-attack">10</span></p>
+                <p>Materials: <span id="materials">0</span></p>
+            </div>
+            <div id="crafting">
+                <h3>Crafting</h3>
+                <div class="crafting-item" onclick="craft('sword')">Forge Sword (5 materials)</div>
+                <div class="crafting-item" onclick="craft('armor')">Craft Armor (8 materials)</div>
+            </div>
+            <div id="skills">
+                <h3>Skill Tree</h3>
+                <div id="skill-tree"></div>
+            </div>
+            <button class="back-home" onclick="location.href='index.html'">← Back to Home</button>
+
+            <div id="how-to-play">
+                <h3>How to Play</h3>
+                <ul>
+                    <li>Use arrow keys or click adjacent tiles to move your player.</li>
+                    <li>Explore the dungeon: find materials, treasures, and fight enemies.</li>
+                    <li>Collect materials to craft better swords and armor.</li>
+                    <li>Engage in combat with enemies; use "Attack" or "Fireball" skill.</li>
+                    <li>Find the exit tile to progress to the next floor.</li>
+                    <li>Manage your health and materials carefully to survive deeper floors.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="combat-screen">
+        <h2 id="enemy-name"></h2>
+        <p>Enemy HP: <span id="enemy-hp"></span></p>
+        <button onclick="playerAttack()">Attack</button>
+        <button onclick="useSkill()">Fireball (MP: 20)</button>
+        <button onclick="endCombat(false)">Run Away</button>
+    </div>
+
+    <script>
+        let player = {
+            x: 5,
+            y: 5,
+            level: 1,
+            hp: 100,
+            maxHP: 100,
+            attack: 10,
+            materials: 0,
+            equipment: { sword: 0, armor: 0 },
+            skills: { fireball: false },
+            mp: 50
+        };
+
+        let currentFloor = 1;
+        let dungeon = [];
+        let inCombat = false;
+        let currentEnemy = null;
+
+        function generateDungeon() {
+            dungeon = [];
+            for(let y = 0; y < 10; y++) {
+                let row = [];
+                for(let x = 0; x < 10; x++) {
+                    let tileType = Math.random() < 0.7 ? 'empty' : getRandomEvent();
+                    row.push({ type: tileType, revealed: false });
+                }
+                dungeon.push(row);
+            }
+            dungeon[5][5] = { type: 'player', revealed: true };
+            placeExit();
+        }
+
+        function getRandomEvent() {
+            const events = ['enemy', 'material', 'material', 'treasure', 'trap'];
+            return events[Math.floor(Math.random() * events.length)];
+        }
+
+        function placeExit() {
+            let placed = false;
+            while(!placed) {
+                let x = Math.floor(Math.random() * 10);
+                let y = Math.floor(Math.random() * 10);
+                if(dungeon[y][x].type === 'empty') {
+                    dungeon[y][x].type = 'exit';
+                    placed = true;
+                }
+            }
+        }
+
+        function movePlayer(dx, dy) {
+            if(inCombat) return;
+            
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            
+            if(newX >= 0 && newX < 10 && newY >= 0 && newY < 10) {
+                const tile = dungeon[newY][newX];
+                dungeon[player.y][player.x].type = 'empty';
+                player.x = newX;
+                player.y = newY;
+                handleTileEvent(tile.type);
+                dungeon[player.y][player.x].type = 'player';
+                updateDungeonView();
+            }
+        }
+
+        function handleTileEvent(type) {
+            switch(type) {
+                case 'enemy':
+                    startCombat();
+                    break;
+                case 'material':
+                    const gained = Math.floor(Math.random() * 3) + 1;
+                    player.materials += gained;
+                    alert(`You found ${gained} materials!`);
+                    updateStats();
+                    break;
+                case 'trap':
+                    player.hp -= 20;
+                    alert('You triggered a trap! -20 HP');
+                    if(player.hp <= 0) gameOver();
+                    updateStats();
+                    break;
+                case 'treasure':
+                    player.materials += 10;
+                    alert('You found a treasure chest with 10 materials!');
+                    updateStats();
+                    break;
+                case 'exit':
+                    alert('You found the exit! Proceeding to next floor...');
+                    nextFloor();
+                    break;
+            }
+        }
+
+        // Combat system
+        function startCombat() {
+            inCombat = true;
+            currentEnemy = generateEnemy();
+            document.getElementById('combat-screen').style.display = 'block';
+            updateCombatUI();
+        }
+
+        function generateEnemy() {
+            const enemies = [
+                { name: 'Goblin', hp: 50, attack: 15 },
+                { name: 'Skeleton', hp: 80, attack: 20 },
+                { name: 'Dragon', hp: 200, attack: 40 }
+            ];
+            return { ...enemies[Math.floor(Math.random() * enemies.length)] };
+        }
+
+        function playerAttack() {
+            const damage = player.attack + (player.equipment.sword * 5);
+            currentEnemy.hp -= damage;
+            if(currentEnemy.hp <= 0) endCombat(true);
+            else enemyAttack();
+            updateCombatUI();
+        }
+
+        function useSkill() {
+            if(player.mp >= 20) {
+                player.mp -= 20;
+                currentEnemy.hp -= 50;
+                if(currentEnemy.hp <= 0) endCombat(true);
+                else enemyAttack();
+                updateCombatUI();
+            } else {
+                alert("Not enough MP!");
+            }
+        }
+
+        function enemyAttack() {
+            const damage = currentEnemy.attack;
+            player.hp -= damage;
+            if(player.hp <= 0) gameOver();
+        }
+
+        function endCombat(victory) {
+            inCombat = false;
+            document.getElementById('combat-screen').style.display = 'none';
+            if(victory) {
+                alert(`You defeated the ${currentEnemy.name}!`);
+                player.materials += 5;
+                player.level++;
+                player.maxHP += 10;
+                player.hp = player.maxHP;
+                player.attack += 2;
+                updateStats();
+                updateDungeonView();
+            } else {
+                alert('You fled from combat!');
+            }
+            currentEnemy = null;
+        }
+
+        function gameOver() {
+            alert("You died! Game over.");
+            location.reload();
+        }
+
+        // Crafting system
+        function craft(item) {
+            const costs = { sword: 5, armor: 8 };
+            if(player.materials >= costs[item]) {
+                player.materials -= costs[item];
+                player.equipment[item]++;
+                if(item === 'sword') player.attack += 5;
+                if(item === 'armor') {
+                    player.maxHP += 20;
+                    player.hp += 20;
+                }
+                alert(`You crafted a ${item}!`);
+                updateStats();
+            } else {
+                alert("Not enough materials!");
+            }
+        }
+
+        // Skill tree
+        const skillTree = [
+            { id: 'fireball', name: 'Fireball', cost: 3, requires: null },
+            { id: 'heal', name: 'Healing', cost: 5, requires: 'fireball' },
+            { id: 'double-attack', name: 'Double Attack', cost: 8, requires: null }
+        ];
+
+        function renderSkillTree() {
+            const container = document.getElementById('skill-tree');
+            container.innerHTML = skillTree.map(skill => `
+                <div class="skill-node" onclick="buySkill('${skill.id}')">
+                    ${skill.name}<br>
+                    Cost: ${skill.cost} levels
+                </div>
+            `).join('');
+        }
+
+        function buySkill(skillId) {
+            const skill = skillTree.find(s => s.id === skillId);
+            if(player.level >= skill.cost && (!skill.requires || player.skills[skill.requires])) {
+                if(player.skills[skillId]) {
+                    alert("Skill already acquired!");
+                    return;
+                }
+                player.skills[skillId] = true;
+                player.level -= skill.cost;
+                alert(`You learned the skill: ${skill.name}!`);
+                updateStats();
+            } else {
+                alert("You do not meet the requirements or level to learn this skill.");
+            }
+        }
+
+        // Dungeon View Update
+        function updateDungeonView() {
+            const container = document.getElementById('dungeon-view');
+            container.innerHTML = '';
+
+            dungeon.forEach((row, y) => {
+                row.forEach((tile, x) => {
+                    const div = document.createElement('div');
+                    div.className = `tile ${tile.type}`;
+                    div.title = tile.type.charAt(0).toUpperCase() + tile.type.slice(1);
+                    div.onclick = () => {
+                        const dx = x - player.x;
+                        const dy = y - player.y;
+                        if(Math.abs(dx) <= 1 && Math.abs(dy) <= 1) movePlayer(dx, dy);
+                    };
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('player-level').textContent = player.level;
+            document.getElementById('player-hp').textContent = player.hp;
+            document.getElementById('player-max-hp').textContent = player.maxHP;
+            document.getElementById('player-attack').textContent = player.attack;
+            document.getElementById('materials').textContent = player.materials;
+        }
+
+        function updateCombatUI() {
+            document.getElementById('enemy-name').textContent = currentEnemy.name;
+            document.getElementById('enemy-hp').textContent = currentEnemy.hp > 0 ? currentEnemy.hp : 0;
+        }
+
+        function nextFloor() {
+            currentFloor++;
+            alert(`Welcome to floor ${currentFloor}!`);
+            generateDungeon();
+            player.x = 5;
+            player.y = 5;
+            player.hp = player.maxHP;
+            updateDungeonView();
+            updateStats();
+        }
+
+        window.onload = () => {
+            generateDungeon();
+            updateDungeonView();
+            updateStats();
+            renderSkillTree();
+
+            document.addEventListener('keydown', (e) => {
+                if(inCombat) return;
+                switch(e.key) {
+                    case 'ArrowUp': movePlayer(0, -1); break;
+                    case 'ArrowDown': movePlayer(0, 1); break;
+                    case 'ArrowLeft': movePlayer(-1, 0); break;
+                    case 'ArrowRight': movePlayer(1, 0); break;
+                }
+            });
+        };
+    </script>
+</body>
+</html>

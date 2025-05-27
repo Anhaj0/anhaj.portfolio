@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Entertainment – Anhaj's Badge Collector</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <title>Entertainment – Anhaj's Game Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="assets/css/style.css"/>
 </head>
 <body>
@@ -19,7 +19,7 @@
         <a href="index.html">Home</a>
         <a href="certificates.html">Certificates</a>
         <a href="experience.html">Work Experience</a>
-        <a href="entertainment.html">Entertainment</a>
+        <a href="entertainment.html" class="active">Entertainment</a>
         <div class="social-media-mobile">
           <a href="https://github.com/Anhaj0" target="_blank"><img src="assets/images/github-logo.png" alt="GitHub"></a>
           <a href="https://www.linkedin.com/in/anhaj-uwaisulkarni-1781a8308/" target="_blank"><img src="assets/images/linkedin-logo.png" alt="LinkedIn"></a>
@@ -34,12 +34,15 @@
   </header>
 
   <main class="container">
-    <h1 class="fade-in">Anhaj's Badge Collector</h1>
-    <p class="fade-in">Click the button to collect a random certificate badge!</p>
-    <button class="button fade-in" id="game-btn">Collect Badge</button>
+    <h1 class="fade-in">Entertainment - Game Hub</h1>
+    <p class="fade-in">Choose a game to play:</p>
+
+    <div class="game-list fade-in" style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px; margin: 1rem auto;">
+      <button class="button" onclick="location.href='dungeon-dimension.html'">Dungeon Dimension</button>
+      <button class="button" onclick="location.href='cookie-clicker.html'">cookie-clicker</button>
+    </div>
   </main>
 
   <script src="assets/js/main.js"></script>
-  <script src="assets/js/game.js"></script>
 </body>
 </html>
