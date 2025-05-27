@@ -22,8 +22,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Close menu when clicking outside
     document.addEventListener('click', (event) => {
-      if (!mobileMenuContainer.contains(event.target) &&
-          event.target !== menuToggle &&
+
+      if (!mobileMenuContainer.contains(event.target) && 
+          event.target !== menuToggle && 
           mobileMenuContainer.classList.contains('active')) {
         mobileMenuContainer.classList.remove('active');
         menuToggle.setAttribute('aria-expanded', 'false');
@@ -64,6 +65,7 @@ window.addEventListener('DOMContentLoaded', () => {
       window.location.href = `mailto:Anhaj0@icloud.com?subject=${subject}&body=${body}`;
     });
   }
+
 });
 
 window.addEventListener('load', () => {
@@ -149,23 +151,4 @@ window.addEventListener('load', () => {
   }
 
   rotate();
-
-  window.addEventListener('load', () => {
-  const tiltElements = document.querySelectorAll('.tilt-image');
-  VanillaTilt.init(tiltElements, {
-    max: 15,         // max tilt rotation (degrees)
-    speed: 400,      // animation speed
-    glare: true,     // enables glare effect
-    "max-glare": 0.3 // max glare opacity
-  });
-});
-
-// Add this block to stop video replay
-  const video = document.querySelector('.hero-image video');
-  if (video) {
-    video.addEventListener('ended', () => {
-      video.pause();
-    });
-  }
-
 });

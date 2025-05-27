@@ -135,6 +135,14 @@ header {
 }
 
 
+
+/* Highlight the active tab with a color change or underline */
+#mobile-menu-container nav a:hover,
+#mobile-menu-container nav.active {
+  color: var(--menu-hover-color); /* Change color */
+  border-bottom: 2px solid var(--menu-hover-color); /* Light underlining effect */
+}
+
 #mobile-menu-container nav.active {
   font-weight: bold; /* Highlight the active link */
 }
@@ -250,6 +258,11 @@ p {
   align-items: center;
 }
 
+.cert-item:hover {
+  transform: translateY(-5px);
+  scale: 1.1; /* Zoom effect on hover */
+}
+
 .cert-image-container {
   width: 100%;
   max-width: 200px;
@@ -338,6 +351,7 @@ p {
 .hero-image img {
   max-width: 280px;
   width: 100%;
+
   border-radius: 50%;  /* make picture round */
   border: none;        /* remove border */
   box-shadow: none;    /* remove shadow */
@@ -360,7 +374,6 @@ p {
   z-index: 10; /* keep hovered card on top */
   box-shadow: 0 10px 20px rgba(0,0,0,0.4); /* optional nice shadow */
 }
-
 
 .hero-text .subtitle {
   color: var(--button-color);
